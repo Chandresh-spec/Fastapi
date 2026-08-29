@@ -29,3 +29,27 @@ class Responsemodel(BaseModel):
 
 
 # alembic revision --autogenerate -m "create users table"
+
+
+
+
+class RegisterReq(BaseModel):
+    name:str
+    email:str
+    password:str
+
+
+class RegisterRes(BaseModel):
+    id:int
+    name:str
+    email:str
+    
+
+class LoginSchema(BaseModel):
+    email:str
+    password:str
+
+
+class LoginOutSchema(BaseModel):
+    access_token:str
+    refresh_token:str

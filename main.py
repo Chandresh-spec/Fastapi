@@ -5,10 +5,11 @@ from fastapi import HTTPException
 from fastapi import Depends
 from typing import Annotated
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from .database import Base,engine,get_db
 from .models import User
-from .schemas import UserProfile,RequestProfile
-
+from .schemas import UserProfile,RequestProfile,RegisterReq,RegisterRes,LoginOutSchema,LoginSchema
+from .auth import hash_password,authenticate_user,create_access_token,create_refresh_token
 
 print(Base.metadata.tables)
 Base.metadata.create_all(bind=engine)
@@ -185,7 +186,60 @@ def delete_user(id:int,db:Session=Depends(get_db)):
 
     user.delete()
     db.commit()
-    return user
+    return {
+        "message":"user deleted sucessfull"
+    }
+
+
+
+@app.post("/user/register",response_model=RegisterRes)
+def register(user:RegisterReq,db:Session=Depends(get_db)):
+
+    existinng=db.execute(select(User).where(User.email==user.email)).scalar_one_or_none()
+    if existinng:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="email already exists"
+        )
+
+    db_user=User(
+        name=user.name,
+        email=user.email,
+        hashed_password=hash_password(user.password)
+
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+
+@app.post("/login")
+def login(user:LoginSchema,db:Session=Depends(get_db)):
+    print("hello")
+
+    db_user=authenticate_user(user.email,user.password,db)
+    print("hello2")
+   
+    
+
+    if db_user is None:
+         raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="user not found"
+                )
+
+    
+    access_token=create_access_token({"sub":db_user.id})
+    refresh_token=create_refresh_token({"sub":db_user.id})
+
+    return {
+        "access_token":access_token,
+        "refresh_token":refresh_token
+    }
+
+
 
 
 

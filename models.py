@@ -8,10 +8,12 @@ from .database import Base
 
 
 class User(Base):
-    __tablename__ = "canara"
+    __tablename__ = "users"
     id:Mapped[int]=mapped_column(primary_key=True)
     name:Mapped[str]=mapped_column(String(100))
-    grade:Mapped[str]=mapped_column(String(10))
-    info:Mapped[str]=mapped_column(String(100))
+    email:Mapped[str]=mapped_column(String(50))
+    hashed_password:Mapped[str]=mapped_column(String(100))
+
    
+
 
