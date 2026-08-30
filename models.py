@@ -14,6 +14,14 @@ class User(Base):
     email:Mapped[str]=mapped_column(String(50))
     hashed_password:Mapped[str]=mapped_column(String(100))
 
-   
+
+
+
+class Course(Base):
+    __tablename__ ="courses"
+    id:Mapped[int]=mapped_column(primary_key=True)
+    name:Mapped[str]=mapped_column(String(100))
+    
+    
 
 

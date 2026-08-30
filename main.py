@@ -7,9 +7,10 @@ from typing import Annotated
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from .database import Base,engine,get_db
-from .models import User
-from .schemas import UserProfile,RequestProfile,RegisterReq,RegisterRes,LoginOutSchema,LoginSchema
+from .models import User,Course
+from .schemas import UserProfile,RequestProfile,RegisterReq,RegisterRes,LoginOutSchema,LoginSchema,ProfileSchema,CourseSchema
 from .auth import hash_password,authenticate_user,create_access_token,create_refresh_token
+from .deps import current_user
 
 print(Base.metadata.tables)
 Base.metadata.create_all(bind=engine)
@@ -231,8 +232,8 @@ def login(user:LoginSchema,db:Session=Depends(get_db)):
                 )
 
     
-    access_token=create_access_token({"sub":db_user.id})
-    refresh_token=create_refresh_token({"sub":db_user.id})
+    access_token=create_access_token({"sub":str(db_user.id)})
+    refresh_token=create_refresh_token({"sub":str(db_user.id)})
 
     return {
         "access_token":access_token,
@@ -243,13 +244,27 @@ def login(user:LoginSchema,db:Session=Depends(get_db)):
 
 
 
+@app.get("/get_user/",response_model=ProfileSchema)
+def check_user(user:User=Depends(current_user)):    
+    return user
 
-
+    
 
 
 
     
+@app.get("/course",response_model=list[CourseSchema])
+def list_course(user:User=Depends(current_user),db:Session=Depends(get_db)):
+    if user is None:
+        return {
+            "message":"auth required"
+        }
 
+    course=db.query(Course).all()
+    
+
+    return course
+    
 
 
 

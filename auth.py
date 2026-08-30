@@ -31,7 +31,8 @@ def verify_password(password:str,hashed_password):
 def get_user(db:Session,email:str):
      return db.query(User).filter(User.email==email).first()
 
- 
+def get_user1(db:Session,id:int):
+      return db.query(User).filter(User.id==id).first()
             
        
 
@@ -85,5 +86,13 @@ def create_refresh_token(data:dict):
       )
 
       return jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
+
+
+def decode_token(token:str):
+    return jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+
+
+
+
 
 

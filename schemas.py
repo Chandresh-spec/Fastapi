@@ -53,3 +53,17 @@ class LoginSchema(BaseModel):
 class LoginOutSchema(BaseModel):
     access_token:str
     refresh_token:str
+
+
+
+
+class ProfileSchema(BaseModel):
+    id:int
+    name:str
+    email:str
+
+
+
+class CourseSchema(BaseModel):
+    id:int
+    name:str
