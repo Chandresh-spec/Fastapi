@@ -67,3 +67,22 @@ class ProfileSchema(BaseModel):
 class CourseSchema(BaseModel):
     id:int
     name:str
+
+
+
+
+class InputCourse(BaseModel):
+    name:str
+
+
+
+    
+
+
+class CourseInput(BaseModel):
+    name:str
+    price:int
+
+
+
+

@@ -5,12 +5,13 @@ from fastapi import HTTPException
 from fastapi import Depends
 from typing import Annotated
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select,insert
 from .database import Base,engine,get_db
-from .models import User,Course
-from .schemas import UserProfile,RequestProfile,RegisterReq,RegisterRes,LoginOutSchema,LoginSchema,ProfileSchema,CourseSchema
+from .models import User,Profile,Course,Student,Course_purchase
+from .schemas import UserProfile,RequestProfile,RegisterReq,RegisterRes,LoginOutSchema,LoginSchema,ProfileSchema,CourseSchema,InputCourse
 from .auth import hash_password,authenticate_user,create_access_token,create_refresh_token
 from .deps import current_user
+from . import schemas
 
 print(Base.metadata.tables)
 Base.metadata.create_all(bind=engine)
@@ -209,9 +210,21 @@ def register(user:RegisterReq,db:Session=Depends(get_db)):
         hashed_password=hash_password(user.password)
 
     )
+
+
     db.add(db_user)
+    db.flush()
+    profile=Profile(
+            user_id=db_user.id
+        )
+
+  
+
+    db.add(profile)
+    
     db.commit()
     db.refresh(db_user)
+    db.refresh(profile)
     return db_user
 
 
@@ -253,19 +266,66 @@ def check_user(user:User=Depends(current_user)):
 
 
     
-@app.get("/course",response_model=list[CourseSchema])
-def list_course(user:User=Depends(current_user),db:Session=Depends(get_db)):
-    if user is None:
-        return {
-            "message":"auth required"
-        }
 
-    course=db.query(Course).all()
+@app.get("/get_profile/")
+def profile_user(user:User=Depends(current_user),db:Session=Depends(get_db)):
+    return {
+        "username":user.name,
+        "useremail":user.email,
+        "userbio":user.profile.bio
+    }
+
+@app.get("/get_userprofile/")
+def get_user_profile(user:User=Depends(current_user),db:Session=Depends(get_db)):
+    stmt=select(Profile).where(Profile.user_id==user.id)
+    profile=db.scalar(stmt)
+    return {
+        "profile.bio":profile.bio,
+        "profile.id":profile.id,
+        "profileuser":profile.user.name
+    }
+
+
+@app.post("/save_course")
+def save_course(sent_data:schemas.CourseInput,user:User=Depends(current_user),db:Session=Depends(get_db)):
+    curs=Course(
+        name=sent_data.name,
+        price=sent_data.price,
+        user_id=user.id
+    )
+
+    db.add(curs)
+    db.commit()
+    db.refresh(curs)
+
+    return {
+        "msg":"data saved sucessfully"
+    }
+
+
+@app.get("/fetch_course")
+def get_course(user:User=Depends(current_user),db:Session=Depends(get_db)):
+    return user.course
     
 
-    return course
-    
 
 
+@app.get("/course_user/{id}")
+def get_course_user(id:int,db:Session=Depends(get_db)):
+
+    stmt=select(Course).where(Course.id==id)
+    curs=db.scalar(stmt)
+
+    return curs.user
 
 
+@app.post("/course_purchase")
+def purchase_course(id:int,user:User=Depends(current_user),db:Session=Depends(get_db)):
+    course_prchse=Course_purchase(
+        st_id=user.id,
+        course_id=id
+    )
+
+    db.add(course_prchse)
+    db.commit()
+    db.refresh(course_prchse)
