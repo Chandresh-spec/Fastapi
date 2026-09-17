@@ -329,3 +329,5 @@ def purchase_course(id:int,user:User=Depends(current_user),db:Session=Depends(ge
     db.add(course_prchse)
     db.commit()
     db.refresh(course_prchse)
+
+
